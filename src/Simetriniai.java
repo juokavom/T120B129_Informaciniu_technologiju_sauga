@@ -14,10 +14,8 @@ public class Simetriniai
     {
         // Savo uzduotis realizuokite kaip klases Main metodus
         // ir juos iskvieskite is sio metodo, kaip pavyzdziui:
-        //doListBCCapabilities();
-        doEncryptAES();
-        //doDecryptSerpent();
-
+        //doEncryptAES();
+        doDecryptTEA();
     }
 
     public static void doEncryptAES() throws Exception
@@ -52,73 +50,46 @@ public class Simetriniai
         ptLength += cipher.doFinal(decrText, ptLength);
         System.out.println("Iššifruotas tekstas : " + toHex(decrText) + " baitai: " + ptLength);
     }
-    public static void doDecryptSerpent() throws Exception
-    {
-        //small changes
-        byte[]  input = new byte[] {
-                (byte) 0xDF, (byte) 0xD1, (byte) 0xAD, (byte) 0x8F, (byte) 0xED, 0x3D, 0x09, 0x1F,
-                (byte) 0x79, (byte) 0xD8, 0x5F, 0x1A, 0x0E, (byte) 0x8F, 0x1F, 0x61,
-                (byte) 0xD9, (byte) 0x8C, 0x1A, 0x50, 0x03, (byte) 0xFD, (byte) 0xEE, 0x0B,
-                0x61, 0x5F, (byte) 0xC3, (byte) 0x94, (byte) 0xD8, (byte) 0xFE, 0x1C, 0x54};
-        /*byte[]  keyBytes = new byte[] {
-                0x66, 0x65, 0x56, 0x66, 0x66, 0x65, 0x56, 0x66,
-                0x33, 0x31, 0x13, 0x33, 0x33, 0x31, 0x13, 0x33};*/
-        byte[]  keyBytes = Hex.decode("6665566666655666 3331133333311333");
-        byte[]	ivBytes = new byte[] {
-                0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00,
-                0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 
-        System.out.println("Input : " + toHex(input));
-        SecretKeySpec   key = new SecretKeySpec(keyBytes, 0, 16, "serpent");
-        // IV turi buti lygiai tiek baitu, koks yra bloko ilgis
-        IvParameterSpec ivSpec = new IvParameterSpec(ivBytes, 0, 16);
-        Cipher          cipher = Cipher.getInstance("serpent/CBC/TBCPadding");
+    public static void doDecryptTEA() throws Exception
+    {
+        byte[]  cipherText = Hex.decode("0BFB0E46DA1A19D5 B8E283386FB492F3 574A4C3D4DA0FB82");
+        //byte[]  cipherText = Hex.decode("A9FB0E46DA1A19D5 B8E283386FB492F3 574A4C3D4DA0FB82"); //Modifikuota šifrograma 3.3
+        byte[]  ivBytes = Hex.decode("0706050403020100");
+        //byte[]  ivBytes = Hex.decode("070605A903020100"); //Modifikuotas IV 3.4
+        byte[]  keyBytes = Hex.decode("6665566666655666 3331133333311333");
+
+        System.out.println("Šifrograma : " + toHex(cipherText));
+        System.out.println("TEA raktas : " + toHex(keyBytes));
+        System.out.println("IV : " + toHex(ivBytes));
+
+        SecretKeySpec key = new SecretKeySpec(keyBytes, 0, 16,"TEA");
+        Cipher        cipher = Cipher.getInstance("TEA/CBC/TBCPadding");
+        IvParameterSpec ivSpec = new IvParameterSpec(ivBytes, 0, 8);
+        int           len = cipherText.length;
 
         cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
-        byte[] plainText = new byte[cipher.getOutputSize(input.length)];
+        byte[] plainText = new byte[cipher.getOutputSize(cipherText.length)];
 
-        int ptLength = cipher.update(input, 0, input.length, plainText, 0);
+        int ptLength = cipher.update(cipherText, 0, cipherText.length, plainText, 0);
         ptLength += cipher.doFinal(plainText, ptLength);
-        System.out.println("Serpent decrypted message: " + toHex(plainText, ptLength) + " bytes: " + ptLength);
-        byte[] raktas = key.getEncoded();
-        System.out.println("Used key : " + toHex(raktas));
-        System.out.println("Used IV : " + toHex(ivSpec.getIV()));
+        System.out.println("Iššifruotas tekstas : " + toHex(plainText, ptLength) + " baitai: " + ptLength);
+
+        /*
+        plainText[19] = (byte) 0xA9;
+        System.out.println("Iššifruotas modifikuotas tekstas : " + toHex(plainText, ptLength) + " baitai: " + ptLength); //Modifikuota tekstograma 3.2
+         */
 
         //Patikrinimas
         cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
-        byte[] cipherText = new byte[cipher.getOutputSize(ptLength)];
+        byte[] cipherText2 = new byte[cipher.getOutputSize(ptLength)];
 
-        int ctLength = cipher.update(plainText, 0, ptLength, cipherText, 0);
-        ctLength += cipher.doFinal(cipherText, ctLength);
+        int ctLength2 = cipher.update(plainText, 0, ptLength, cipherText2, 0);
+        ctLength2 += cipher.doFinal(cipherText2, ctLength2);
 
-        System.out.println("Cipher text : " + toHex(cipherText, ctLength) + " bytes: " + ctLength);
-
-
+        System.out.println("Užšifruotas tekstas : " + toHex(cipherText2, ctLength2) + " baitai: " + ctLength2);
     }
 
-    /**
-     * List the available capabilities for ciphers, key agreement, macs, message
-     * digests, signatures and other objects in the BC provider.
-     */
-    public static void doListBCCapabilities() throws Exception
-    {
-        Provider	provider = Security.getProvider("BC");
-        Iterator        it = provider.keySet().iterator();
-
-        while (it.hasNext())
-        {
-            String	entry = (String)it.next();
-            // this indicates the entry refers to another entry
-            if (entry.startsWith("Alg.Alias."))
-            {
-                entry = entry.substring("Alg.Alias.".length());
-            }
-            String  factoryClass = entry.substring(0, entry.indexOf('.'));
-            String  name = entry.substring(factoryClass.length() + 1);
-
-            System.out.println(factoryClass + ": " + name);
-        }
-    }
 
     /**
      * Du pagalbiniai metodai skirti "graziai" atvaizduoti baitu masyvus

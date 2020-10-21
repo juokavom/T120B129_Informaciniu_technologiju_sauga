@@ -91,7 +91,6 @@ public class main
 
     public static boolean doBCCheck()
     {
-        // TODO code application logic here
         String name = "BC";
         if (Security.getProvider(name) == null)
         {
