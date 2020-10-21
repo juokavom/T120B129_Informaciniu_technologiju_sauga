@@ -54,6 +54,7 @@ public class Simetriniai
     }
     public static void doDecryptSerpent() throws Exception
     {
+        //small changes
         byte[]  input = new byte[] {
                 (byte) 0xDF, (byte) 0xD1, (byte) 0xAD, (byte) 0x8F, (byte) 0xED, 0x3D, 0x09, 0x1F,
                 (byte) 0x79, (byte) 0xD8, 0x5F, 0x1A, 0x0E, (byte) 0x8F, 0x1F, 0x61,
