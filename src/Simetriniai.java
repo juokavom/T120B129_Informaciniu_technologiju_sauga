@@ -15,47 +15,43 @@ public class Simetriniai
         // Savo uzduotis realizuokite kaip klases Main metodus
         // ir juos iskvieskite is sio metodo, kaip pavyzdziui:
         //doListBCCapabilities();
-        //doEncryptSimpleAES();
-        doDecryptSerpent();
+        doEncryptAES();
+        //doDecryptSerpent();
 
     }
 
-    public static void doEncryptSimpleAES() throws Exception
+    public static void doEncryptAES() throws Exception
     {
-        byte[]  plainText = new byte[] {
-                (byte) 0x93, 0x20, (byte) 0xC8, (byte) 0x9B, 0x0E, 0x24, 0x02, 0x58,
-                (byte) 0xC9, 0x3D, 0x30, (byte) 0xF7, 0x5B, (byte) 0x81, 0x52, 0x70};
+        byte[]  plainText = Hex.decode("035816224D55DEC6 173EFE204B47B054 E063DCF424590D9F 2B5B087F1968AB24");
+        //byte[]  plainText = Hex.decode("035816224D55DEC6 173EFE0B4B47B054 E063DCF424590D9F 2B5B087F1968AB24"); //Modifikuota tekstograma 2.2
+        //byte[]  plainText = Hex.decode("035816224D55DEC6 173EFE204B47B054 E063DCF424590D9F 2B5B087F1968AB"); //Sutrumpinta tekstograma 2.3
+        byte[]  keyBytes = Hex.decode("0001020304050607 08090A0B0C0D0E0F 1011121314151617 2021222324252627");
 
-        byte[]  keyBytes = new byte[] {
-                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-        // Duomenu ilgis turi dalintis is naudojamo metodo bloko ilgio
         SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
         Cipher        cipher = Cipher.getInstance("AES/ECB/NoPadding");
         int           len = plainText.length;
 
-        System.out.println("Plain text : " + toHex(plainText, len));
-        System.out.println("AES key : " + toHex(keyBytes));
+        System.out.println("Tekstograma : " + toHex(plainText, len));
+        System.out.println("AES raktas : " + toHex(keyBytes));
 
         byte[] cipherText = new byte[len];
         cipher.init(Cipher.ENCRYPT_MODE, key);
         int ctLength = cipher.update(plainText, 0, len, cipherText, 0);
         ctLength += cipher.doFinal(cipherText, ctLength);
-        System.out.println("Cipher text : " + toHex(cipherText) + " bytes: " + ctLength);
+        System.out.println("Šifrograma : " + toHex(cipherText) + " baitai: " + ctLength);
+
+        /*
+        cipherText[10] = (byte) 0x8C;
+        System.out.println("Modifikuota šifrograma : " + toHex(cipherText) + " baitai: " + ctLength); //modifikuota šifrograma 2.4
+        */
+
         // Patikrinimas
         byte[] decrText = new byte[len];
         cipher.init(Cipher.DECRYPT_MODE, key);
         int ptLength = cipher.update(cipherText, 0, len, decrText, 0);
         ptLength += cipher.doFinal(decrText, ptLength);
-        System.out.println("Decrypted text : " + toHex(decrText) + " bytes: " + ptLength);
+        System.out.println("Iššifruotas tekstas : " + toHex(decrText) + " baitai: " + ptLength);
     }
-    /*
-    input : BABA000000000000 0102030400000000 BABA
-    cipher: DFD1AD8FED3D091F 79D85F1A0E8F1F61 D98C1A5003FDEE0B 615FC394D8FE1C54  bytes: 32
-    Naudotas raktas : 6665566666655666 3331133333311333
-    Naudotas IV : 0706050403020100 08090A0B0C0D0E0F
-    plain : BABA000000000000 0102030400000000 BABA bytes: 18
-    */
     public static void doDecryptSerpent() throws Exception
     {
         byte[]  input = new byte[] {
